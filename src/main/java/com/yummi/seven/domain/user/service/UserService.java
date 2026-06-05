@@ -4,11 +4,15 @@ import com.yummi.seven.domain.user.dto.UserRequestDTO;
 import com.yummi.seven.domain.user.entity.UserEntity;
 import com.yummi.seven.domain.user.entity.UserRole;
 import com.yummi.seven.domain.user.repository.UserRepository;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -29,6 +33,18 @@ public class UserService {
         entity.setRole(UserRole.USER);
 
         userRepository.save(entity);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
+        UserEntity entity = userRepository.findByUsername(username).orElseThrow();
+
+        return User.builder()
+                .username(entity.getUsername())
+                .password(entity.getPassword())
+                .roles(entity.getRole().name())
+                .build();
     }
 
 }
